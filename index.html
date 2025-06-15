@@ -94,10 +94,12 @@
       map.add(incidentLayer);
 
       const search = new Search({ view: view });
-      view.ui.add(search, "top-right");
+      view.ui.add(search, "top-left");
 
       const locate = new Locate({ view: view });
-      view.ui.add(locate, "top-right");
+      view.ui.add(locate, "top-left");
+
+      view.ui.move("zoom", "bottom-right");
 
       window.addReport = function() {
         view.popup.open({
