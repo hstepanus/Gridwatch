@@ -1,7 +1,10 @@
 # Geog576_Midterm_real
+# This is a reporting tool with functionality of add report with choiches such blackout, fire, electrical failure, and obstruction. Basemap choices are streets, terrains, vegetation, and combination of structures and vegetation. The report is gathered at my survey in arcgis online account.
+
 # add styles
 # add base map
 # add report type
+# add the whole completed script
 <style>
     html, body, #viewDiv {
       padding: 0;
@@ -34,6 +37,7 @@
       background-color: #005a87;
     }
 
+# base map choices :
  <div id="basemapSelector">
     <label for="basemapSelect">Basemap:</label>
     <select id="basemapSelect" onchange="changeBasemap(this.value)">
@@ -60,6 +64,7 @@ function createReportForm() {
           <button onclick="submitReport()">Submit</button>
         `;
         return container;
+# add the whole script
 
 <!DOCTYPE html>
 <html lang="en">
@@ -142,7 +147,8 @@ function createReportForm() {
       });
 
       const territoryLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0"
+        url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
+        opacity:0.5
       });
       map.add(territoryLayer);
 
