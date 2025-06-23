@@ -79,12 +79,12 @@
       });
 
       const territoryLayer = new FeatureLayer({
-        url: "https://uw-mad.maps.arcgis.com/home/item.html?id=6d77f535b377456687a52279b61006cb"
+        url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0"
       });
       map.add(territoryLayer);
 
       const incidentLayer = new FeatureLayer({
-        url: "https://uw-mad.maps.arcgis.com/home/item.html?id=45608208cc6a42899f1b8ff7a00521f9",
+        url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_dbec98d452884e3ca51548ab0ca97c1f_form/FeatureServer/0",
         outFields: ["*"],
         popupTemplate: {
           title: "{report_type}",
