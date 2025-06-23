@@ -79,12 +79,12 @@
       });
 
       const territoryLayer = new FeatureLayer({
-        url: "https://yourserver/arcgis/rest/services/landbase/TerritoryBoundary/FeatureServer/0"
+        url: "https://github.com/hstepanus/Geog576_Midterm_real"
       });
       map.add(territoryLayer);
 
       const incidentLayer = new FeatureLayer({
-        url: "https://yourserver/arcgis/rest/services/survey123/MySurvey/FeatureServer/0",
+        url: "https://survey123.arcgis.com/surveys/dbec98d452884e3ca51548ab0ca97c1f/data",
         outFields: ["*"],
         popupTemplate: {
           title: "{report_type}",
