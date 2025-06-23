@@ -1,6 +1,7 @@
 # Geog576_Midterm_real
 # add styles
 # add base map
+# add report type
 <style>
     html, body, #viewDiv {
       padding: 0;
