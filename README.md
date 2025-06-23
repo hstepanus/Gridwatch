@@ -2,7 +2,7 @@
  This is a reporting tool with functionality of add report with choiches such blackout, fire, electrical failure, and obstruction. Basemap choices are streets, terrains, vegetation, and combination of structures and vegetation. The report is gathered at my survey in arcgis online account.
 
  
- add the whole completed script
+ add the whole completed script:
 
 
 <!DOCTYPE html>
@@ -11,6 +11,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ALEX GO! - Incident Reporting Map</title>
+  
+  
   <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
   <style>
     html, body, #viewDiv {
@@ -75,7 +77,7 @@
     ], function(Map, MapView, Search, Locate, FeatureLayer, Graphic, Point) {
 
       let map = new Map({
-        basemap: "streets"
+        basemap: "topo"
       });
 
       const view = new MapView({
@@ -87,7 +89,7 @@
 
       const territoryLayer = new FeatureLayer({
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
-        opacity:0.5
+        opacity: 0.5
       });
       map.add(territoryLayer);
 
@@ -168,3 +170,4 @@
   </script>
 </body>
 </html>
+
