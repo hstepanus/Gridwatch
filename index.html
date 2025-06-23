@@ -79,12 +79,12 @@
       });
 
       const territoryLayer = new FeatureLayer({
-        url: "https://github.com/hstepanus/Geog576_Midterm_real"
+        url: "https://uw-mad.maps.arcgis.com/home/item.html?id=6d77f535b377456687a52279b61006cb"
       });
       map.add(territoryLayer);
 
       const incidentLayer = new FeatureLayer({
-        url: "https://survey123.arcgis.com/surveys/dbec98d452884e3ca51548ab0ca97c1f/data",
+        url: "https://uw-mad.maps.arcgis.com/home/item.html?id=45608208cc6a42899f1b8ff7a00521f9",
         outFields: ["*"],
         popupTemplate: {
           title: "{report_type}",
