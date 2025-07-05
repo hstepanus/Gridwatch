@@ -2,7 +2,7 @@
  This is a reporting tool with functionality of add report with choiches such blackout, fire, electrical failure, and obstruction. Basemap choices are streets, terrains, vegetation, and combination of structures and vegetation. The report is gathered at my survey in arcgis online account.
 
  
- add the whole completed script:
+ add the whole completed basic script without a title, a legend,etc:
 
  <!--
 <!DOCTYPE html>
