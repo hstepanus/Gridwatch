@@ -4,7 +4,7 @@
  
  add the whole completed script:
 
-
+ <!--
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,29 +12,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ALEX GO! - Incident Reporting Map</title>
 
-  <!-- ArcGIS JS API stylesheet -->
+  <!-- ArcGIS JS API stylesheet 
   <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
 
   <style>
     /* Full-screen map container and UI controls styling */
-    html, body, #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-    }
-
+  
     /* Button and dropdown menu */
-    #addReportBtn, #basemapSelector {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 10;
-      background: white;
-      padding: 10px;
-      margin-bottom: 5px;
-    }
-
+   
     /* Positioning for basemap selector, I put it below "add report" button */
     #basemapSelector {
       top: 70px;
@@ -56,17 +41,17 @@
     }
   </style>
 
-  <!-- ArcGIS JavaScript API , I use a generic API-->
+  <!-- ArcGIS JavaScript API , I use a generic API
   <script src="https://js.arcgis.com/4.25/"></script>
 </head>
 <body>
 
-  <!-- Button to trigger report form popup -->
+  <!-- Button to trigger report form popup 
   <div id="addReportBtn">
     <button onclick="addReport()">Add Report</button>
   </div>
 
-  <!-- Dropdown to change basemap style -->
+  <!-- Dropdown to change basemap style 
   <div id="basemapSelector">
     <label for="basemapSelect">Basemap:</label>
     <select id="basemapSelect" onchange="changeBasemap(this.value)">
@@ -77,10 +62,10 @@
     </select>
   </div>
 
-  <!-- Main map view container -->
+  <!-- Main map view container 
   <div id="viewDiv"></div>
 
-  <!-- Main application logic using ArcGIS JS API -->
+  <!-- Main application logic using ArcGIS JS API 
   <script>
     require([
       "esri/Map",
