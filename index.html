@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
 
   <style>
-    /* Full-screen map container and UI controls styling */
     html, body, #viewDiv {
       padding: 0;
       margin: 0;
@@ -17,7 +16,6 @@
       width: 100%;
     }
 
-    /* Title styling */
     #appTitle {
       position: absolute;
       top: 10px;
@@ -34,7 +32,6 @@
       font-family: Arial, sans-serif;
     }
 
-    /* Button and dropdown menu styling */
     #addReportBtn, #basemapSelector {
       position: absolute;
       right: 10px;
@@ -44,7 +41,6 @@
       margin-bottom: 5px;
     }
 
-    /* Adjusted for title spacing */
     #addReportBtn {
       top: 60px;
     }
@@ -53,7 +49,6 @@
       top: 120px;
     }
 
-    /* Styling the Add Report button */
     #addReportBtn button {
       font-size: 18px;
       padding: 12px 24px;
@@ -74,15 +69,12 @@
 </head>
 <body>
 
-  <!-- App title -->
   <div id="appTitle">Alex Go!</div>
 
-  <!-- Button to trigger report form popup -->
   <div id="addReportBtn">
     <button onclick="addReport()">Add Report</button>
   </div>
 
-  <!-- Dropdown to change basemap style -->
   <div id="basemapSelector">
     <label for="basemapSelect">Basemap:</label>
     <select id="basemapSelect" onchange="changeBasemap(this.value)">
@@ -93,45 +85,42 @@
     </select>
   </div>
 
-  <!-- Main map view container -->
   <div id="viewDiv"></div>
 
-  <!-- Main application logic using ArcGIS JS API -->
   <script>
     require([
       "esri/Map",
       "esri/views/MapView",
       "esri/widgets/Search",
       "esri/widgets/Locate",
+      "esri/widgets/Legend",
       "esri/layers/FeatureLayer",
       "esri/Graphic",
       "esri/geometry/Point"
-    ], function(Map, MapView, Search, Locate, FeatureLayer, Graphic, Point) {
+    ], function(Map, MapView, Search, Locate, Legend, FeatureLayer, Graphic, Point) {
 
-      // Create the map and set the initial basemap
-      let map = new Map({
+      const map = new Map({
         basemap: "topo"
       });
 
-      // Initialize the MapView and center on Northern Virginia
       const view = new MapView({
         container: "viewDiv",
         map: map,
-        center: [-77.5, 38.5],  // Longitude, Latitude
+        center: [-77.5, 38.5],
         zoom: 9
       });
 
-      // Load the territory boundary layer with 50% opacity
       const territoryLayer = new FeatureLayer({
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
-        opacity: 0.5
+        opacity: 0.5,
+        title: "Service Territory"
       });
       map.add(territoryLayer);
 
-      // Load the incident reports layer (from Survey123 form)
       const incidentLayer = new FeatureLayer({
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_dbec98d452884e3ca51548ab0ca97c1f_form/FeatureServer/0",
         outFields: ["*"],
+        title: "Incident Reports",
         popupTemplate: {
           title: "{report_type}",
           content: "{description}<br>Status: {status}"
@@ -139,18 +128,24 @@
       });
       map.add(incidentLayer);
 
-      // Add Search widget for address/location lookup
       const search = new Search({ view: view });
       view.ui.add(search, "top-left");
 
-      // Add Locate widget to find user's current location
       const locate = new Locate({ view: view });
       view.ui.add(locate, "top-left");
 
-      // Move zoom controls to bottom-right corner
       view.ui.move("zoom", "bottom-right");
 
-      // Function to open popup for submitting a new report
+      // Add Legend widget
+      const legend = new Legend({
+        view: view,
+        layerInfos: [
+          { layer: territoryLayer },
+          { layer: incidentLayer }
+        ]
+      });
+      view.ui.add(legend, "bottom-left");
+
       window.addReport = function() {
         view.popup.open({
           title: "New Report",
@@ -159,7 +154,6 @@
         });
       };
 
-      // Dynamically generate HTML form inside popup
       function createReportForm() {
         const container = document.createElement("div");
         container.innerHTML = `
@@ -177,18 +171,15 @@
         return container;
       }
 
-      // Handle form submission and save new report to incident layer
       window.submitReport = function() {
         const type = document.getElementById("reportType").value;
         const desc = document.getElementById("description").value;
 
-        // Use current map center as report location
         const point = new Point({
           longitude: view.center.longitude,
           latitude: view.center.latitude
         });
 
-        // Create a new graphic feature to submit
         const newReport = new Graphic({
           geometry: point,
           attributes: {
@@ -199,7 +190,6 @@
           }
         });
 
-        // Apply the edit to the hosted feature layer (submit report)
         incidentLayer.applyEdits({
           addFeatures: [newReport]
         }).then(function() {
@@ -208,7 +198,6 @@
         });
       };
 
-      // Change the basemap dynamically when the user selects a new one
       window.changeBasemap = function(basemapName) {
         view.map.basemap = basemapName;
       };
