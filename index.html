@@ -17,10 +17,26 @@
       width: 100%;
     }
 
+    /* Title styling */
+    #appTitle {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 11;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 10px 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #0079c1;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      font-family: Arial, sans-serif;
+    }
+
     /* Button and dropdown menu styling */
     #addReportBtn, #basemapSelector {
       position: absolute;
-      top: 10px;
       right: 10px;
       z-index: 10;
       background: white;
@@ -28,9 +44,13 @@
       margin-bottom: 5px;
     }
 
-    /* Positioning for basemap selector */
+    /* Adjusted for title spacing */
+    #addReportBtn {
+      top: 60px;
+    }
+
     #basemapSelector {
-      top: 70px;
+      top: 120px;
     }
 
     /* Styling the Add Report button */
@@ -49,10 +69,13 @@
     }
   </style>
 
-  <!-- ArcGIS JavaScript API, I use a generic API -->
+  <!-- ArcGIS JavaScript API -->
   <script src="https://js.arcgis.com/4.25/"></script>
 </head>
 <body>
+
+  <!-- App title -->
+  <div id="appTitle">Alex Go!</div>
 
   <!-- Button to trigger report form popup -->
   <div id="addReportBtn">
