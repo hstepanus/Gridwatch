@@ -1,39 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GridWatch</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GridWatch — Survey123 + Map</title>
   <style>
-    #map { height: 70vh; width: 100%; }
-    body { font-family: Arial, sans-serif; padding: 10px; }
-    form { margin-top: 20px; }
-    input, select, button { margin: 5px 0; padding: 5px; width: 100%; }
+    :root {
+      --bg: #0b1220;
+      --panel: #131b2e;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --text: #e2e8f0;
+    }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    a { color: var(--accent); text-decoration: none; }
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    header { display:flex; gap:16px; align-items:center; padding: 12px 16px; border-bottom: 1px solid #1f263a; background: linear-gradient(180deg, #0f172a, #0b1220); }
+    header h1 { margin: 0; font-size: 18px; letter-spacing: .4px; }
+    header .badge { padding: 2px 8px; background: #1f2937; color: var(--muted); border-radius: 999px; font-size: 12px; }
+
+    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 14px; padding: 14px; }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+    .panel { background: var(--panel); border: 1px solid #1f263a; border-radius: 14px; overflow: hidden; }
+    .panel header { display:flex; align-items:center; justify-content:space-between; background: transparent; border:0; padding: 12px 14px; }
+    .panel header h2 { margin:0; font-size: 15px; color:#cbd5e1; }
+    .panel .body { padding: 0 14px 14px; }
+
+    .form-embed { width: 100%; height: 520px; border: 0; border-top: 1px solid #1f263a; }
+
+    .filters { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 10px 0 14px; }
+    .filters label { font-size: 12px; color: var(--muted); display:block; margin-bottom:6px; }
+    .filters select, .filters input[type="date"] { width:100%; padding:10px 12px; background:#0f172a; color:var(--text); border:1px solid #1f263a; border-radius: 10px; }
+    .filters button { padding:10px 12px; border:1px solid #1f263a; background:#0f172a; color:var(--text); border-radius:10px; cursor:pointer; }
+    .filters button:hover { border-color:#334155; }
+
+    #viewDiv { width: 100%; height: 100%; min-height: 640px; border: 1px solid #1f263a; border-radius: 14px; overflow: hidden; }
+    .esri-ui { font-family: inherit; }
+    .legend-box { position:absolute; right:12px; bottom:12px; padding:10px 12px; background:#0f172aDD; border:1px solid #1f263a; border-radius:12px; color:#cbd5e1; z-index:5; backdrop-filter: blur(4px); }
+    .legend-box h3 { margin:0 0 6px; font-size:12px; color:#94a3b8; font-weight:600; }
+
+    .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#0f172a; border:1px solid #1f263a; border-radius:999px; font-size:12px; color:#cbd5e1; }
   </style>
+  <!-- ArcGIS Maps SDK for JavaScript -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
 </head>
 <body>
-  <h2>GridWatch Utility Incident Tracker</h2>
-  <div id="map"></div>
+  <div class="app">
+    <header>
+      <h1>⚡ GridWatch</h1>
+      <span class="badge">Survey123 + AGOL map</span>
+      <span class="pill">No API key needed (OSM basemap)</span>
+    </header>
 
-  <form onsubmit="event.preventDefault(); submitReport();">
-    <label for="type">Incident Type:</label>
-    <select id="type">
-      <option value="Power Outage">Power Outage</option>
-      <option value="Downed Line">Downed Line</option>
-      <option value="Blown Transformer">Blown Transformer</option>
-    </select>
+    <div class="layout">
+      <!-- LEFT: Report + Filters -->
+      <section class="panel" aria-label="Report & Filters">
+        <header>
+          <h2>Report an issue</h2>
+          <a id="openForm" href="#" target="_blank">open in new tab ↗</a>
+        </header>
+        <iframe id="s123" class="form-embed" title="Survey123 form"></iframe>
+        <div class="body">
+          <h2 style="margin:14px 0 6px; font-size:15px; color:#cbd5e1;">Map filters</h2>
+          <div class="filters">
+            <div>
+              <label for="typeSel">Type</label>
+              <select id="typeSel">
+                <option value="">All</option>
+                <option>Outage</option>
+                <option>Voltage spike</option>
+                <option>Damaged line</option>
+                <option>Tree on line</option>
+              </select>
+            </div>
+            <div>
+              <label for="statusSel">Status</label>
+              <select id="statusSel">
+                <option value="">All</option>
+                <option>New</option>
+                <option>In progress</option>
+                <option>Resolved</option>
+              </select>
+            </div>
+            <div>
+              <label for="dateSel">Since (date)</label>
+              <input id="dateSel" type="date" />
+            </div>
+            <div style="display:flex; gap:8px; align-items:end;">
+              <button id="applyBtn">Apply</button>
+              <button id="resetBtn">Reset</button>
+            </div>
+          </div>
+          <p class="note">Tip: update the <code>CONFIG</code> block in this file with your Survey123 form URL and Feature Layer URL. Match the field names if your schema differs.</p>
+        </div>
+      </section>
 
-    <label for="latitude">Latitude:</label>
-    <input type="text" id="latitude" required>
+      <!-- RIGHT: Map -->
+      <section class="panel" aria-label="Map">
+        <header>
+          <h2>Live reports</h2>
+          <span class="pill" id="countPill">0 features</span>
+        </header>
+        <div id="viewDiv"></div>
+        <div class="legend-box">
+          <h3>Legend</h3>
+          <div>● Outage</div>
+          <div>● Voltage spike</div>
+          <div>● Damaged line</div>
+          <div>● Tree on line</div>
+        </div>
+      </section>
+    </div>
+  </div>
 
-    <label for="longitude">Longitude:</label>
-    <input type="text" id="longitude" required>
+  <script>
+    // ==========================
+    // 🔧 CONFIG — UPDATE THESE
+    // ==========================
+    const CONFIG = {
+      // 1) Your Survey123 web form URL (Share > Copy link). Example:
+      survey123Url: "https://survey123.arcgis.com/share/<YOUR-FORM-ID>?hide=navbar,header",
 
-    <button type="submit">Submit Incident</button>
-  </form>
+      // 2) The Feature Layer URL that Survey123 writes to (0 = points layer)
+      featureLayerUrl: "https://services.arcgis.com/<ORG-ID>/arcgis/rest/services/<FEATURE-SVC-NAME>/FeatureServer/0",
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+      // 3) Field names used in your feature layer (adjust to your Survey123 schema)
+      fields: {
+        type: "type",          // e.g., 'type' or 'issue_type'
+        status: "status",      // e.g., 'status'
+        created: "CreationDate" // Survey123 often writes 'CreationDate' (epoch ms) or a date field like 'created_at'
+      },
+
+      // Optional: initial map center/zoom
+      view: { center: [-96.8, 37.5], zoom: 4 } // USA
+    };
+
+    // Set Survey123 iframe + link
+    const s123 = document.getElementById('s123');
+    const openForm = document.getElementById('openForm');
+    s123.src = CONFIG.survey123Url;
+    openForm.href = CONFIG.survey123Url;
+
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/Search",
+      "esri/widgets/BasemapToggle",
+      "esri/rest/support/Query"
+    ], function(Map, MapView, FeatureLayer, Search, BasemapToggle, Query) {
+      const layer = new FeatureLayer({
+        url: CONFIG.featureLayerUrl,
+        outFields: ["*"],
+        popupEnabled: true,
+        featureReduction: { type: "cluster" },
+        popupTemplate: {
+          title: "{" + CONFIG.fields.type + "} — {" + CONFIG.fields.status + "}",
+          content: [
+            { type: "fields", fieldInfos: [
+              { fieldName: CONFIG.fields.type, label: "Type" },
+              { fieldName: CONFIG.fields.status, label: "Status" },
+              { fieldName: CONFIG.fields.created, label: "Created" }
+            ] },
+            { type: "text", text: "<em>Submitted via Survey123</em>" }
+          ]
+        }
+      });
+
+      const map = new Map({ basemap: "osm", layers: [layer] });
+      const view = new MapView({ container: "viewDiv", map, center: CONFIG.view.center, zoom: CONFIG.view.zoom });
+
+      // Widgets
+      view.ui.add(new Search({ view }), "top-right");
+      view.ui.add(new BasemapToggle({ view, nextBasemap: "satellite" }), "top-right");
+
+      // Track count
+      const countPill = document.getElementById('countPill');
+      function updateCount() {
+        if (!layer.loaded) return;
+        const q = layer.createQuery();
+        q.where = layer.definitionExpression || "1=1";
+        q.returnGeometry = false;
+        q.outFields = [];
+        layer.queryFeatureCount(q).then((n) => countPill.textContent = n + " features");
+      }
+      layer.when(updateCount);
+      layer.watch("definitionExpression", updateCount);
+
+      // Filters
+      const typeSel = document.getElementById('typeSel');
+      const statusSel = document.getElementById('statusSel');
+      const dateSel = document.getElementById('dateSel');
+      const applyBtn = document.getElementById('applyBtn');
+      const resetBtn = document.getElementById('resetBtn');
+
+      function buildWhere() {
+        const parts = [];
+        if (typeSel.value) parts.push(`${CONFIG.fields.type} = '${typeSel.value}'`);
+        if (statusSel.value) parts.push(`${CONFIG.fields.status} = '${statusSel.value}'`);
+
+        if (dateSel.value) {
+          // Handle both date fields: true date or epoch (CreationDate)
+          const d = new Date(dateSel.value);
+          if (CONFIG.fields.created.toLowerCase() === "creationdate") {
+            // CreationDate is epoch ms in Survey123-hosted layers, use BETWEEN for the selected day
+            const start = d.getTime();
+            const end = start + 24*60*60*1000; // +1 day
+            parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);
+          } else {
+            // If it's a true date field
+            const iso = dateSel.value; // yyyy-mm-dd
+            parts.push(`${CONFIG.fields.created} >= DATE '${iso}'`);
+          }
+        }
+        return parts.join(' AND ') || null;
+      }
+
+      function applyFilters() {
+        layer.definitionExpression = buildWhere();
+      }
+
+      applyBtn.addEventListener('click', applyFilters);
+      resetBtn.addEventListener('click', () => {
+        typeSel.value = "";
+        statusSel.value = "";
+        dateSel.value = "";
+        layer.definitionExpression = null;
+      });
+
+      // Zoom to data when ready
+      view.whenLayerView(layer).then(() => {
+        layer.queryExtent().then((res) => {
+          if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{});
+        });
+      });
+    });
+  </script>
 </body>
 </html>
