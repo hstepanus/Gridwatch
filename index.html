@@ -21,11 +21,20 @@
     .panel header h2{margin:0;font-size:15px;color:#cbd5e1}
     .panel .body{padding:0 14px 14px}
     .form-embed{width:100%;height:520px;border:0;border-top:1px solid #1f263a}
+    .note{color:var(--muted);font-size:12px;margin-top:8px}
     #viewDiv{width:100%;height:100%;min-height:640px;border:1px solid #1f263a;border-radius:14px;position:relative;overflow:hidden}
     .legend-box{position:absolute;right:12px;bottom:12px;padding:10px;background:#0f172aDD;border:1px solid #1f263a;border-radius:12px;color:#cbd5e1;z-index:5}
     .legend-box h3{margin:0 0 6px;font-size:12px;color:#94a3b8;font-weight:600}
-    .note{color:var(--muted);font-size:12px;margin-top:8px}
-    .wxBox{border-radius:12px;padding:10px;border:1px solid #1f263a;background:#0f172a}
+    .status { margin:8px 14px 0; padding:10px; border-radius:10px; border:1px solid #334155; background:#0f172a; font-size:12px; color:#cbd5e1; display:none }
+    .status.error { border-color:#b91c1c; background:#7f1d1d33; color:#fecaca }
+    .status.warn  { border-color:#b45309; background:#78350f33; color:#fde68a }
+
+    /* Filters */
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
+    .filters label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    .filters select,.filters input[type="date"]{width:100%;padding:10px 12px;background:#0f172a;color:#e2e8f0;border:1px solid #1f263a;border-radius:10px}
+    .filters button{padding:10px 12px;border:1px solid #1f263a;background:#0f172a;color:#e2e8f0;border-radius:10px;cursor:pointer}
+    .filters .buttons{display:flex;gap:8px;align-items:end}
 
     /* Compact icon visibility switcher beside zoom */
     .vis-switch {
@@ -73,24 +82,59 @@
     </header>
 
     <div class="layout">
+      <!-- LEFT: Survey + Filters + Weather -->
       <section class="panel">
         <header>
           <h2>Report an issue</h2>
           <a id="openForm" href="#" target="_blank">open in new tab ↗</a>
         </header>
         <iframe id="s123" class="form-embed" title="Survey123 form"></iframe>
+
         <div class="body">
+          <h2 style="margin:14px 0 6px;font-size:15px;color:#cbd5e1;">Map filters</h2>
+          <div class="filters">
+            <div>
+              <label for="typeSel">Type</label>
+              <select id="typeSel">
+                <option value="">All</option>
+                <option>Outage</option>
+                <option>Voltage spike</option>
+                <option>Damaged line</option>
+                <option>Tree on line</option>
+              </select>
+            </div>
+            <div>
+              <label for="statusSel">Status</label>
+              <select id="statusSel">
+                <option value="">All</option>
+                <option>New</option>
+                <option>In progress</option>
+                <option>Resolved</option>
+              </select>
+            </div>
+            <div>
+              <label for="dateSel">Since (date)</label>
+              <input id="dateSel" type="date" />
+            </div>
+            <div class="buttons">
+              <button id="applyBtn">Apply</button>
+              <button id="resetBtn">Reset</button>
+            </div>
+          </div>
+
           <h2>Weather (NOAA)</h2>
           <p class="note">Click anywhere on the map to fetch a local forecast.</p>
           <div id="wxBox" class="wxBox"><div id="wxSummary">No location selected.</div></div>
         </div>
       </section>
 
+      <!-- RIGHT: Map -->
       <section class="panel">
         <header>
           <h2>Live reports</h2>
           <span class="pill" id="countPill">0 features</span>
         </header>
+
         <div id="viewDiv">
           <!-- Legend popup -->
           <div id="legendPop" class="legend-pop" role="dialog" aria-modal="false" aria-labelledby="legendTitle">
@@ -103,6 +147,7 @@
             <div class="row"><div class="ico">⚠️</div> <div><b>NWS Alerts</b><br><small>Active weather alerts</small></div></div>
           </div>
         </div>
+
         <div class="legend-box">
           <h3>Legend</h3>
           <div>● Outage</div><div>● Voltage spike</div><div>● Damaged line</div><div>● Tree on line</div>
@@ -152,6 +197,45 @@
       }
       reportsLayer.when(updateCount); reportsLayer.watch("definitionExpression",updateCount);
 
+      // ===== Filters wiring =====
+      const typeSel=document.getElementById('typeSel');
+      const statusSel=document.getElementById('statusSel');
+      const dateSel=document.getElementById('dateSel');
+      const applyBtn=document.getElementById('applyBtn');
+      const resetBtn=document.getElementById('resetBtn');
+
+      // prevent using filters before fields are known
+      applyBtn.disabled = true;
+      reportsLayer.when(()=>{ applyBtn.disabled=false; });
+
+      applyBtn.addEventListener('click', ()=>{
+        const parts=[];
+        if(typeSel.value)   parts.push(`${CONFIG.fields.type}='${typeSel.value}'`);
+        if(statusSel.value) parts.push(`${CONFIG.fields.status}='${statusSel.value}'`);
+        if(dateSel.value){
+          const d=new Date(dateSel.value);
+          if (CONFIG.fields.created.toLowerCase()==="creationdate"){
+            const start=d.getTime(), end=start+24*60*60*1000;
+            parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);
+          } else {
+            parts.push(`${CONFIG.fields.created} >= DATE '${dateSel.value}'`);
+          }
+        }
+        reportsLayer.definitionExpression = parts.join(" AND ") || null;
+        updateCount();
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        typeSel.value=""; statusSel.value=""; dateSel.value="";
+        reportsLayer.definitionExpression=null;
+        updateCount();
+      });
+
+      // Zoom to reports extent (if any)
+      view.whenLayerView(reportsLayer).then(()=>{
+        reportsLayer.queryExtent().then((res)=>{ if(res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
+      });
+
       // ===== Icon toggle panel (with dynamic tooltips) =====
       const panel=document.createElement('div');
       panel.className='vis-switch';
@@ -177,27 +261,22 @@
         btnNOV.classList.toggle('on',novec.visible);
         btnNWS.classList.toggle('on',nwsAlerts.visible);
       }
-
       function tipTextFor(btn){
-        const base = btn.getAttribute('data-base') || '';
-        if (btn === btnFR)  return `${base} — ${reportsLayer.visible ? 'ON' : 'OFF'}`;
-        if (btn === btnNOV) return `${base} — ${novec.visible ? 'ON' : 'OFF'}`;
-        if (btn === btnNWS) return `${base} — ${nwsAlerts.visible ? 'ON' : 'OFF'}`;
+        const base=btn.getAttribute('data-base')||'';
+        if(btn===btnFR)  return `${base} — ${reportsLayer.visible?'ON':'OFF'}`;
+        if(btn===btnNOV) return `${base} — ${novec.visible?'ON':'OFF'}`;
+        if(btn===btnNWS) return `${base} — ${nwsAlerts.visible?'ON':'OFF'}`;
         return base;
       }
-
       function showTip(btn){
         tip.textContent = tipTextFor(btn);
-        const rect = btn.getBoundingClientRect();
-        const host = view.container.getBoundingClientRect();
-        tip.style.left = (rect.left - host.left + rect.width/2) + 'px';
-        tip.style.top  = (rect.top - host.top - 8) + 'px';
-        tip.style.transform = 'translate(-50%, -6px)';
+        const rect=btn.getBoundingClientRect(), host=view.container.getBoundingClientRect();
+        tip.style.left=(rect.left-host.left+rect.width/2)+'px';
+        tip.style.top =(rect.top -host.top -8)+'px';
+        tip.style.transform='translate(-50%,-6px)';
         tip.classList.add('show');
       }
       function hideTip(){ tip.classList.remove('show'); }
-
-      // Wire tooltips to hover/focus
       [btnFR,btnNOV,btnNWS,btnHelp].forEach(btn=>{
         btn.addEventListener('mouseenter', ()=>showTip(btn));
         btn.addEventListener('mouseleave', hideTip);
@@ -205,7 +284,6 @@
         btn.addEventListener('blur', hideTip);
       });
 
-      // Toggle behavior
       btnFR.onclick=()=>{ reportsLayer.visible=!reportsLayer.visible; syncButtons(); showTip(btnFR); };
       btnNOV.onclick=()=>{ novec.visible=!novec.visible;       syncButtons(); showTip(btnNOV); };
       btnNWS.onclick=()=>{ nwsAlerts.visible=!nwsAlerts.visible; syncButtons(); showTip(btnNWS); };
@@ -218,8 +296,8 @@
       function closeLegend(){ legendPop.style.display='none'; }
       btnHelp.addEventListener('click', openLegend);
       legendClose.addEventListener('click', closeLegend);
-      view.container.addEventListener('click', (e)=>{
-        if (legendPop.style.display==='block' && !legendPop.contains(e.target) && e.target!==btnHelp) closeLegend();
+      view.container.addEventListener('click',(e)=>{
+        if(legendPop.style.display==='block' && !legendPop.contains(e.target) && e.target!==btnHelp) closeLegend();
       });
 
       // NOAA point forecast on click
