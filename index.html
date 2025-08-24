@@ -4,63 +4,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GridWatch — Survey123 + NOAA + NDVI + NOVEC</title>
-  <style>
-    :root {
-      --bg: #0b1220;
-      --panel: #131b2e;
-      --muted: #94a3b8;
-      --accent: #22d3ee;
-      --text: #e2e8f0;
-    }
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    a { color: var(--accent); text-decoration: none; }
-    .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
-    header { display:flex; gap:16px; align-items:center; padding: 12px 16px; border-bottom: 1px solid #1f263a; background: linear-gradient(180deg, #0f172a, #0b1220); }
-    header h1 { margin: 0; font-size: 18px; letter-spacing: .4px; }
-    header .badge { padding: 2px 8px; background: #1f2937; color: var(--muted); border-radius: 999px; font-size: 12px; }
-
-    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 14px; padding: 14px; }
-    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
-
-    .panel { background: var(--panel); border: 1px solid #1f263a; border-radius: 14px; overflow: hidden; }
-    .panel header { display:flex; align-items:center; justify-content:space-between; background: transparent; border:0; padding: 12px 14px; }
-    .panel header h2 { margin:0; font-size: 15px; color:#cbd5e1; }
-    .panel .body { padding: 0 14px 14px; }
-
-    .form-embed { width: 100%; height: 520px; border: 0; border-top: 1px solid #1f263a; }
-
-    .filters { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 10px 0 14px; }
-    .filters label { font-size: 12px; color: var(--muted); display:block; margin-bottom:6px; }
-    .filters select, .filters input[type="date"] { width:100%; padding:10px 12px; background:#0f172a; color:var(--text); border:1px solid #1f263a; border-radius: 10px; }
-    .filters button { padding:10px 12px; border:1px solid #1f263a; background:#0f172a; color:var(--text); border-radius:10px; cursor:pointer; }
-    .filters button:hover { border-color:#334155; }
-
-    #viewDiv { width: 100%; height: 100%; min-height: 640px; border: 1px solid #1f263a; border-radius: 14px; overflow: hidden; position: relative; }
-    .esri-ui { font-family: inherit; }
-    .legend-box { position:absolute; right:12px; bottom:12px; padding:10px 12px; background:#0f172aDD; border:1px solid #1f263a; border-radius:12px; color:#cbd5e1; z-index:5; backdrop-filter: blur(4px); }
-    .legend-box h3 { margin:0 0 6px; font-size:12px; color:#94a3b8; font-weight:600; }
-
-    .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
-    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#0f172a; border:1px solid #1f263a; border-radius:999px; font-size:12px; color:#cbd5e1; }
-
-    /* Weather box */
-    .wxBox { border-radius:12px; padding:10px; border:1px solid #1f263a; background:#0f172a; }
-    .wxBox b { color:#e5e7eb; }
-  </style>
-  <!-- ArcGIS Maps SDK for JavaScript -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
+  <style>
+    :root { --bg:#0b1220; --panel:#131b2e; --muted:#94a3b8; --accent:#22d3ee; --text:#e2e8f0; }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    a{color:var(--accent);text-decoration:none}
+    .app{display:grid;grid-template-rows:auto 1fr;height:100%}
+    header{display:flex;gap:16px;align-items:center;padding:12px 16px;border-bottom:1px solid #1f263a;background:linear-gradient(180deg,#0f172a,#0b1220)}
+    header h1{margin:0;font-size:18px;letter-spacing:.4px}
+    .badge{padding:2px 8px;background:#1f2937;color:var(--muted);border-radius:999px;font-size:12px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#0f172a;border:1px solid #1f263a;border-radius:999px;font-size:12px;color:#cbd5e1}
+    .layout{display:grid;grid-template-columns:380px 1fr;gap:14px;padding:14px}
+    @media (max-width:980px){.layout{grid-template-columns:1fr}}
+    .panel{background:var(--panel);border:1px solid #1f263a;border-radius:14px;overflow:hidden}
+    .panel header{display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:12px 14px}
+    .panel header h2{margin:0;font-size:15px;color:#cbd5e1}
+    .panel .body{padding:0 14px 14px}
+    .form-embed{width:100%;height:520px;border:0;border-top:1px solid #1f263a}
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
+    .filters label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    .filters select,.filters input[type="date"]{width:100%;padding:10px 12px;background:#0f172a;color:var(--text);border:1px solid #1f263a;border-radius:10px}
+    .filters button{padding:10px 12px;border:1px solid #1f263a;background:#0f172a;color:var(--text);border-radius:10px;cursor:pointer}
+    .filters button:hover{border-color:#334155}
+    #viewDiv{width:100%;height:100%;min-height:640px;border:1px solid #1f263a;border-radius:14px;overflow:hidden;position:relative}
+    .legend-box{position:absolute;right:12px;bottom:12px;padding:10px 12px;background:#0f172aDD;border:1px solid #1f263a;border-radius:12px;color:#cbd5e1;z-index:5;backdrop-filter:blur(4px)}
+    .legend-box h3{margin:0 0 6px;font-size:12px;color:#94a3b8;font-weight:600}
+    .note{color:var(--muted);font-size:12px;margin-top:8px}
+    .wxBox{border-radius:12px;padding:10px;border:1px solid #1f263a;background:#0f172a}
+  </style>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>⚡ GridWatch</h1>
       <span class="badge">Survey123 + NOAA + NDVI + NOVEC</span>
-      <span class="pill">No API key needed (OSM basemap)</span>
+      <span class="pill">No API key (OSM basemap)</span>
     </header>
 
     <div class="layout">
-      <!-- LEFT: Report + Filters -->
+      <!-- LEFT: Report + Filters + Weather -->
       <section class="panel" aria-label="Report & Filters">
         <header>
           <h2>Report an issue</h2>
@@ -68,7 +51,7 @@
         </header>
         <iframe id="s123" class="form-embed" title="Survey123 form"></iframe>
         <div class="body">
-          <h2 style="margin:14px 0 6px; font-size:15px; color:#cbd5e1;">Map filters</h2>
+          <h2 style="margin:14px 0 6px;font-size:15px;color:#cbd5e1;">Map filters</h2>
           <div class="filters">
             <div>
               <label for="typeSel">Type</label>
@@ -93,15 +76,16 @@
               <label for="dateSel">Since (date)</label>
               <input id="dateSel" type="date" />
             </div>
-            <div style="display:flex; gap:8px; align-items:end;">
+            <div style="display:flex;gap:8px;align-items:end;">
               <button id="applyBtn">Apply</button>
               <button id="resetBtn">Reset</button>
             </div>
           </div>
-          <p class="note">Tip: update the <code>CONFIG</code> block with your Survey123 form URL, Feature Layer URL, NDVI tiles, NOVEC layer, and NOAA Alerts feed. Match field names to your schema.</p>
 
-          <h2 style="margin:14px 0 6px; font-size:15px; color:#cbd5e1;">Weather (NOAA)</h2>
-          <p class="note">Click anywhere on the map to fetch the local NWS forecast.</p>
+          <p class="note">Tip: you can tweak field names in <code>CONFIG.fields</code> to match your Survey123 schema.</p>
+
+          <h2 style="margin:14px 0 6px;font-size:15px;color:#cbd5e1;">Weather (NOAA)</h2>
+          <p class="note">Click anywhere on the map to fetch a local NWS forecast.</p>
           <div id="wxBox" class="wxBox">
             <div id="wxSummary">No location selected.</div>
           </div>
@@ -128,29 +112,29 @@
 
   <script>
     // ==========================
-    // 🔧 CONFIG — UPDATE THESE
+    // 🔧 CONFIG — YOUR LINKS
     // ==========================
     const CONFIG = {
-      // Survey123 web form URL (Share > Copy link)
-      survey123Url: "https://survey123.arcgis.com/share/<YOUR-FORM-ID>?hide=navbar,header",
+      // 1) Your Survey123 web form URL (add ?hide=navbar,header to keep it clean)
+      survey123Url: "https://survey123.arcgis.com/share/dbec98d452884e3ca51548ab0ca97c1f?hide=navbar,header",
 
-      // The Feature Layer URL that Survey123 writes to (0 = points layer)
-      featureLayerUrl: "https://services.arcgis.com/<ORG-ID>/arcgis/rest/services/<FEATURE-SVC-NAME>/FeatureServer/0",
+      // 2) Survey123 feature layer (layer 0 = points layer)
+      featureLayerUrl: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_dbec98d452884e3ca51548ab0ca97c1f_form/FeatureServer/0",
 
-      // Field names used in your feature layer
+      // 3) Field names in your layer (adjust to match your schema)
       fields: {
         type: "type",          // e.g., 'type' or 'issue_type'
-        status: "status",      // e.g., 'status'
+        status: "status",      // e.g., 'status' or 'current_status'
         created: "CreationDate" // Survey123 often writes 'CreationDate' (epoch ms)
       },
 
-      // Extras
+      // 4) Extra overlays/feeds
       nwsAlertsUrl: "https://api.weather.gov/alerts/active?status=actual&message_type=alert",
-      ndviTileUrl:   "https://example.com/arcgis/rest/services/Your_NDVI_Tiles/MapServer", // replace with USGS/Esri NDVI
-      novecLayerUrl: "https://services.arcgis.com/<ORG>/arcgis/rest/services/NOVEC/FeatureServer/0", // your hosted boundary
+      ndviTileUrl: "https://tiles.arcgis.com/tiles/ORGID/arcgis/rest/services/NDVI_Tiles/MapServer", // TODO: replace with your NDVI tiles URL
+      novecLayerUrl: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
 
-      // Initial map view
-      view: { center: [-96.8, 37.5], zoom: 4 } // USA
+      // 5) Initial map view (centered near NOVEC territory; adjust as you like)
+      view: { center: [-77.4, 38.8], zoom: 10 }
     };
 
     // Set Survey123 iframe + link
@@ -171,7 +155,7 @@
       "esri/rest/support/Query"
     ], function(Map, MapView, FeatureLayer, GeoJSONLayer, ImageryTileLayer, Search, BasemapToggle, LayerList, Query) {
 
-      // Survey123 Reports layer
+      // Survey123 reports
       const reportsLayer = new FeatureLayer({
         url: CONFIG.featureLayerUrl,
         outFields: ["*"],
@@ -179,36 +163,39 @@
         featureReduction: { type: "cluster" },
         title: "Field Reports",
         popupTemplate: {
-          title: "{" + CONFIG.fields.type + "} — {" + CONFIG.fields.status + "}",
+          title: `{${CONFIG.fields.type}} — {${CONFIG.fields.status}}`,
           content: [
             { type: "fields", fieldInfos: [
               { fieldName: CONFIG.fields.type, label: "Type" },
               { fieldName: CONFIG.fields.status, label: "Status" },
               { fieldName: CONFIG.fields.created, label: "Created" }
-            ] },
+            ]},
             { type: "text", text: "<em>Submitted via Survey123</em>" }
           ]
         }
       });
 
-      // NOVEC territory (hosted Feature Layer)
+      // NOVEC boundary
       const novec = new FeatureLayer({
         url: CONFIG.novecLayerUrl,
         title: "NOVEC Territory",
         opacity: 0.25,
-        renderer: { type: "simple", symbol: { type: "simple-fill", color: [56,189,248,0.15], outline: { color: [56,189,248,0.9], width: 1.2 } } },
+        renderer: {
+          type: "simple",
+          symbol: { type: "simple-fill", color: [56,189,248,0.15], outline: { color: [56,189,248,0.9], width: 1.2 } }
+        },
         popupTemplate: { title: "Service Territory", content: "{*}" },
         visible: true
       });
 
-      // NDVI tiles
+      // NDVI tiles (optional)
       const ndvi = new ImageryTileLayer({
         url: CONFIG.ndviTileUrl,
         title: "NDVI",
         visible: false
       });
 
-      // NOAA / NWS Active Alerts (GeoJSON)
+      // NOAA / NWS active alerts
       const nwsAlerts = new GeoJSONLayer({
         url: CONFIG.nwsAlertsUrl,
         title: "NWS Alerts",
@@ -229,7 +216,7 @@
       view.ui.add(new BasemapToggle({ view, nextBasemap: "satellite" }), "top-right");
       view.ui.add(new LayerList({ view }), "top-left");
 
-      // Track count
+      // Feature count pill
       const countPill = document.getElementById('countPill');
       function updateCount() {
         if (!reportsLayer.loaded) return;
@@ -237,7 +224,7 @@
         q.where = reportsLayer.definitionExpression || "1=1";
         q.returnGeometry = false;
         q.outFields = [];
-        reportsLayer.queryFeatureCount(q).then((n) => countPill.textContent = n + " features");
+        reportsLayer.queryFeatureCount(q).then(n => countPill.textContent = n + " features");
       }
       reportsLayer.when(updateCount);
       reportsLayer.watch("definitionExpression", updateCount);
@@ -246,72 +233,50 @@
       const typeSel = document.getElementById('typeSel');
       const statusSel = document.getElementById('statusSel');
       const dateSel = document.getElementById('dateSel');
-      const applyBtn = document.getElementById('applyBtn');
-      const resetBtn = document.getElementById('resetBtn');
-
-      function buildWhere() {
+      document.getElementById('applyBtn').addEventListener('click', () => {
         const parts = [];
         if (typeSel.value) parts.push(`${CONFIG.fields.type} = '${typeSel.value}'`);
         if (statusSel.value) parts.push(`${CONFIG.fields.status} = '${statusSel.value}'`);
-
         if (dateSel.value) {
           const d = new Date(dateSel.value);
           if (CONFIG.fields.created.toLowerCase() === "creationdate") {
             const start = d.getTime();
-            const end = start + 24*60*60*1000; // +1 day
+            const end = start + 24*60*60*1000;
             parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);
           } else {
-            const iso = dateSel.value; // yyyy-mm-dd
-            parts.push(`${CONFIG.fields.created} >= DATE '${iso}'`);
+            parts.push(`${CONFIG.fields.created} >= DATE '${dateSel.value}'`);
           }
         }
-        return parts.join(' AND ') || null;
-      }
-
-      function applyFilters() {
-        reportsLayer.definitionExpression = buildWhere();
-      }
-
-      applyBtn.addEventListener('click', applyFilters);
-      resetBtn.addEventListener('click', () => {
-        typeSel.value = "";
-        statusSel.value = "";
-        dateSel.value = "";
+        reportsLayer.definitionExpression = parts.join(" AND ") || null;
+      });
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        typeSel.value = ""; statusSel.value = ""; dateSel.value = "";
         reportsLayer.definitionExpression = null;
       });
 
-      // Zoom to data when ready
+      // Zoom to data
       view.whenLayerView(reportsLayer).then(() => {
-        reportsLayer.queryExtent().then((res) => {
-          if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{});
-        });
+        reportsLayer.queryExtent().then(res => { if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
       });
 
-      // NOAA WEATHER — map click handler
+      // NOAA point forecast on click
       const wxSummary = document.getElementById("wxSummary");
       view.on("click", async (e) => {
         try {
           wxSummary.textContent = "Fetching NOAA point forecast…";
           const { longitude, latitude } = e.mapPoint;
-          const meta = await fetch(`https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`)
-            .then(r => r.json());
-
+          const meta = await fetch(`https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`).then(r => r.json());
           const forecastUrl = meta?.properties?.forecast || meta?.properties?.forecastHourly;
           if (!forecastUrl) throw new Error("No forecast URL for this point.");
-
           const fcst = await fetch(forecastUrl).then(r => r.json());
           const p = fcst?.properties?.periods?.[0];
-          if (p) {
-            wxSummary.innerHTML = `
-              <div style="font-weight:600">${p.name || "Forecast"}</div>
-              <div style="margin-top:4px">${p.detailedForecast || p.shortForecast}</div>
-              <div class="note" style="margin-top:6px">Temp: ${p.temperature}°${p.temperatureUnit} • Wind: ${p.windSpeed} ${p.windDirection}</div>
-            `;
-          } else {
-            wxSummary.textContent = "No forecast periods found for this location.";
-          }
+          wxSummary.innerHTML = p
+            ? `<div style="font-weight:600">${p.name || "Forecast"}</div>
+               <div style="margin-top:4px">${p.detailedForecast || p.shortForecast}</div>
+               <div class="note" style="margin-top:6px">Temp: ${p.temperature}°${p.temperatureUnit} • Wind: ${p.windSpeed} ${p.windDirection}</div>`
+            : "No forecast periods found for this location.";
         } catch (err) {
-          wxSummary.textContent = "NOAA request failed. You may need a small proxy if your network blocks api.weather.gov.";
+          wxSummary.textContent = "NOAA request failed. If blocked, we can add a tiny proxy service.";
           console.error(err);
         }
       });
