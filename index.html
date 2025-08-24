@@ -35,6 +35,26 @@
     .status { margin:8px 14px 0; padding:10px 12px; border-radius:10px; border:1px solid #334155; background:#0f172a; font-size:12px; color:#cbd5e1; display:none }
     .status.error { border-color:#b91c1c; background:#7f1d1d33; color:#fecaca }
     .status.warn  { border-color:#b45309; background:#78350f33; color:#fde68a }
+
+    /* Compact square visibility switcher (sits beside zoom) */
+    .vis-switch {
+      position:absolute; top:12px; left:56px; /* beside default zoom (top-left) */
+      display:flex; gap:6px; padding:6px;
+      background:#0f172a; border:1px solid #1f263a; border-radius:12px;
+      z-index: 10;
+    }
+    .vis-switch button {
+      width:34px; height:34px; border-radius:8px; border:1px solid #1f263a;
+      background:#0b1220; color:#cbd5e1; cursor:pointer; font-weight:700; font-size:12px;
+    }
+    .vis-switch button.on {
+      background: #22d3ee22; border-color:#22d3ee; color:#e2e8f0;
+    }
+    .vis-switch button:focus { outline: 2px solid #22d3ee55; outline-offset: 2px; }
+    @media (max-width: 520px) {
+      .vis-switch { left: 54px; gap:4px; padding:4px; }
+      .vis-switch button { width:30px; height:30px; font-size:11px; }
+    }
   </style>
 </head>
 <body>
@@ -85,7 +105,6 @@
             </div>
           </div>
 
-          
           <h2 style="margin:14px 0 6px;font-size:15px;color:#cbd5e1;">Weather (NOAA)</h2>
           <p class="note">Click anywhere on the map to fetch a local NWS forecast.</p>
           <div id="wxBox" class="wxBox">
@@ -118,24 +137,16 @@
     // 🔧 CONFIG — YOUR LINKS
     // ==========================
     const CONFIG = {
-      // 1) Survey123 web form URL
+      // Survey123 web form URL
       survey123Url: "https://survey123.arcgis.com/share/dbec98d452884e3ca51548ab0ca97c1f?hide=navbar,header",
-
-      // 2) Survey123 feature layer (layer 0 = points layer)
+      // Survey123 feature layer (layer 0 = points)
       featureLayerUrl: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_dbec98d452884e3ca51548ab0ca97c1f_form/FeatureServer/0",
-
-      // 3) Field names in your layer (adjust to match your schema)
-      fields: {
-        type: "type",           // e.g., 'issue_type'
-        status: "status",       // e.g., 'current_status'
-        created: "CreationDate" // Survey123 default (epoch ms)
-      },
-
-      // 4) Feeds / overlays
+      // Field names (match your schema)
+      fields: { type: "type", status: "status", created: "CreationDate" },
+      // Feeds / overlays
       nwsAlertsUrl: "https://api.weather.gov/alerts/active?status=actual&message_type=alert",
       novecLayerUrl: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
-
-      // 5) Initial map view (NOVEC area)
+      // Initial view (NOVEC)
       view: { center: [-77.4, 38.8], zoom: 10 }
     };
 
@@ -151,10 +162,8 @@
       "esri/layers/FeatureLayer",
       "esri/layers/GeoJSONLayer",
       "esri/widgets/Search",
-      "esri/widgets/BasemapToggle",
-      "esri/widgets/LayerList",
-      "esri/rest/support/Query"
-    ], function(Map, MapView, FeatureLayer, GeoJSONLayer, Search, BasemapToggle, LayerList, Query) {
+      "esri/widgets/BasemapToggle"
+    ], function(Map, MapView, FeatureLayer, GeoJSONLayer, Search, BasemapToggle) {
 
       // ===== Status helpers =====
       const statusBar = document.getElementById('statusBar');
@@ -208,7 +217,6 @@
       const nwsAlerts = new GeoJSONLayer({
         url: CONFIG.nwsAlertsUrl,
         title: "NWS Alerts",
-        copyright: "NOAA/NWS",
         visible: false,
         popupTemplate: {
           title: "{event}",
@@ -223,7 +231,6 @@
       // Widgets
       view.ui.add(new Search({ view }), "top-right");
       view.ui.add(new BasemapToggle({ view, nextBasemap: "satellite" }), "top-right");
-      view.ui.add(new LayerList({ view }), "top-left");
 
       // ===== Diagnostics: load & layerview errors =====
       reportsLayer.load().catch(e => { showStatus(hintFromError(e, 'Field Reports'), 'error'); console.error('Reports layer load error:', e); });
@@ -299,6 +306,32 @@
       view.whenLayerView(reportsLayer).then(() => {
         reportsLayer.queryExtent().then((res) => { if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
       }).catch((e)=>{ showStatus("Could not create a layer view for Field Reports. If this layer is private, share it with Everyone or sign in.", 'error'); console.error("Reports layerView error:", e); });
+
+      // ===== Compact square visibility switcher (FR / NOV / NWS) =====
+      const vis = document.createElement('div');
+      vis.className = 'vis-switch';
+      vis.innerHTML = `
+        <button id="btnFR"  title="Field Reports">FR</button>
+        <button id="btnNOV" title="NOVEC Territory">NOV</button>
+        <button id="btnNWS" title="NWS Alerts">NWS</button>
+      `;
+      // place inside the map so it sits beside default zoom
+      document.getElementById('viewDiv').appendChild(vis);
+
+      const btnFR = vis.querySelector('#btnFR');
+      const btnNOV = vis.querySelector('#btnNOV');
+      const btnNWS = vis.querySelector('#btnNWS');
+
+      function syncButtons(){
+        btnFR.classList.toggle('on',  reportsLayer.visible);
+        btnNOV.classList.toggle('on', novec.visible);
+        btnNWS.classList.toggle('on', nwsAlerts.visible);
+      }
+      btnFR.addEventListener('click', ()=>{ reportsLayer.visible = !reportsLayer.visible; syncButtons(); });
+      btnNOV.addEventListener('click', ()=>{ novec.visible       = !novec.visible;       syncButtons(); });
+      btnNWS.addEventListener('click', ()=>{ nwsAlerts.visible    = !nwsAlerts.visible;    syncButtons(); });
+      // initial state
+      syncButtons();
 
       // ===== NOAA point forecast on click =====
       const wxSummary = document.getElementById("wxSummary");
