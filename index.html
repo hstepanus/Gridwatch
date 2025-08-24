@@ -32,6 +32,9 @@
     .legend-box h3{margin:0 0 6px;font-size:12px;color:#94a3b8;font-weight:600}
     .note{color:var(--muted);font-size:12px;margin-top:8px}
     .wxBox{border-radius:12px;padding:10px;border:1px solid #1f263a;background:#0f172a}
+    .status { margin:8px 14px 0; padding:10px 12px; border-radius:10px; border:1px solid #334155; background:#0f172a; font-size:12px; color:#cbd5e1; display:none }
+    .status.error { border-color:#b91c1c; background:#7f1d1d33; color:#fecaca }
+    .status.warn  { border-color:#b45309; background:#78350f33; color:#fde68a }
   </style>
 </head>
 <body>
@@ -98,6 +101,7 @@
           <h2>Live reports</h2>
           <span class="pill" id="countPill">0 features</span>
         </header>
+        <div id="statusBar" class="status"></div>
         <div id="viewDiv"></div>
         <div class="legend-box">
           <h3>Legend</h3>
@@ -115,7 +119,7 @@
     // 🔧 CONFIG — YOUR LINKS
     // ==========================
     const CONFIG = {
-      // 1)  Survey123 web form URL 
+      // 1) Survey123 web form URL
       survey123Url: "https://survey123.arcgis.com/share/dbec98d452884e3ca51548ab0ca97c1f?hide=navbar,header",
 
       // 2) Survey123 feature layer (layer 0 = points layer)
@@ -123,17 +127,16 @@
 
       // 3) Field names in your layer (adjust to match your schema)
       fields: {
-        type: "type",          // e.g., 'type' or 'issue_type'
-        status: "status",      // e.g., 'status' or 'current_status'
-        created: "CreationDate" // Survey123 often writes 'CreationDate' (epoch ms)
+        type: "type",           // e.g., 'issue_type'
+        status: "status",       // e.g., 'current_status'
+        created: "CreationDate" // Survey123 default (epoch ms)
       },
 
-      // 4) Extra overlays/feeds
+      // 4) Feeds / overlays
       nwsAlertsUrl: "https://api.weather.gov/alerts/active?status=actual&message_type=alert",
-      ndviTileUrl: "https://tiles.arcgis.com/tiles/ORGID/arcgis/rest/services/NDVI_Tiles/MapServer", // TODO: replace with your NDVI tiles URL
       novecLayerUrl: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
 
-      // 5) Initial map view (centered near NOVEC territory)
+      // 5) Initial map view (NOVEC area)
       view: { center: [-77.4, 38.8], zoom: 10 }
     };
 
@@ -148,14 +151,22 @@
       "esri/views/MapView",
       "esri/layers/FeatureLayer",
       "esri/layers/GeoJSONLayer",
-      "esri/layers/ImageryTileLayer",
       "esri/widgets/Search",
       "esri/widgets/BasemapToggle",
       "esri/widgets/LayerList",
       "esri/rest/support/Query"
-    ], function(Map, MapView, FeatureLayer, GeoJSONLayer, ImageryTileLayer, Search, BasemapToggle, LayerList, Query) {
+    ], function(Map, MapView, FeatureLayer, GeoJSONLayer, Search, BasemapToggle, LayerList, Query) {
 
-      // Survey123 reports
+      // ===== Status helpers =====
+      const statusBar = document.getElementById('statusBar');
+      function showStatus(msg, type='warn'){
+        statusBar.textContent = msg;
+        statusBar.className = 'status ' + (type||'');
+        statusBar.style.display = 'block';
+      }
+      function hideStatus(){ statusBar.style.display='none'; }
+
+      // ===== Field Reports (Survey123) =====
       const reportsLayer = new FeatureLayer({
         url: CONFIG.featureLayerUrl,
         outFields: ["*"],
@@ -175,27 +186,26 @@
         }
       });
 
-      // NOVEC boundary
+      // ===== NOVEC boundary (visible at all scales + diagnostics) =====
       const novec = new FeatureLayer({
         url: CONFIG.novecLayerUrl,
         title: "NOVEC Territory",
         opacity: 0.25,
+        minScale: 0,  // visible at any zoom in
+        maxScale: 0,  // visible at any zoom out
         renderer: {
           type: "simple",
-          symbol: { type: "simple-fill", color: [56,189,248,0.15], outline: { color: [56,189,248,0.9], width: 1.2 } }
+          symbol: {
+            type: "simple-fill",
+            color: [56, 189, 248, 0.15],
+            outline: { color: [56, 189, 248, 0.9], width: 1.2 }
+          }
         },
         popupTemplate: { title: "Service Territory", content: "{*}" },
         visible: true
       });
 
-      // NDVI tiles 
-      const ndvi = new ImageryTileLayer({
-        url: CONFIG.ndviTileUrl,
-        title: "NDVI",
-        visible: false
-      });
-
-      // NOAA / NWS active alerts
+      // ===== NWS active alerts =====
       const nwsAlerts = new GeoJSONLayer({
         url: CONFIG.nwsAlertsUrl,
         title: "NWS Alerts",
@@ -207,8 +217,8 @@
         }
       });
 
-      // Map
-      const map = new Map({ basemap: "osm", layers: [reportsLayer, novec, ndvi, nwsAlerts] });
+      // ===== Map & View =====
+      const map = new Map({ basemap: "osm", layers: [reportsLayer, novec, nwsAlerts] });
       const view = new MapView({ container: "viewDiv", map, center: CONFIG.view.center, zoom: CONFIG.view.zoom });
 
       // Widgets
@@ -216,50 +226,82 @@
       view.ui.add(new BasemapToggle({ view, nextBasemap: "satellite" }), "top-right");
       view.ui.add(new LayerList({ view }), "top-left");
 
-      // Feature count pill
+      // ===== Diagnostics: load & layerview errors =====
+      reportsLayer.load().catch(e => { showStatus(hintFromError(e, 'Field Reports'), 'error'); console.error('Reports layer load error:', e); });
+      novec.load().then(() => {
+        const q = novec.createQuery(); q.where = "1=1"; q.returnGeometry = false;
+        novec.queryFeatureCount(q).then(c => {
+          console.info("NOVEC feature count:", c);
+          if (c === 0) showStatus("NOVEC layer has 0 features (check your published shapefile).", "warn");
+        });
+      }).catch(e => { showStatus(hintFromError(e, 'NOVEC Territory'), 'error'); console.error('NOVEC layer load error:', e); });
+
+      reportsLayer.on("layerview-create-error", (e) => { showStatus(hintFromError(e.error || e, 'Field Reports'), 'error'); console.error("Reports layerview-create-error:", e); });
+      novec.on("layerview-create-error", (e) => { showStatus(hintFromError(e.error || e, 'NOVEC Territory'), 'error'); console.error("NOVEC layerview-create-error:", e); });
+
+      function hintFromError(err, layerName){
+        const code = (err && (err.code || err.httpStatus || err.status)) || '';
+        if (code===498 || code===499 || code===403) {
+          return `${layerName}: authentication required (HTTP ${code}). In ArcGIS Online, open the layer item and Share → Everyone (public), or add OAuth.`;
+        }
+        return `${layerName}: failed to load. Check the URL ends with /FeatureServer/0, that the layer is shared publicly, and that field names in CONFIG.fields match your schema.`;
+      }
+
+      // ===== Feature count pill for reports =====
       const countPill = document.getElementById('countPill');
       function updateCount() {
         if (!reportsLayer.loaded) return;
         const q = reportsLayer.createQuery();
         q.where = reportsLayer.definitionExpression || "1=1";
-        q.returnGeometry = false;
-        q.outFields = [];
+        q.returnGeometry = false; q.outFields = [];
         reportsLayer.queryFeatureCount(q).then(n => countPill.textContent = n + " features");
       }
-      reportsLayer.when(updateCount);
-      reportsLayer.watch("definitionExpression", updateCount);
 
-      // Filters
+      // Log actual fields & enable Apply when ready
+      const applyBtn = document.getElementById('applyBtn');
+      applyBtn.disabled = true;
+      reportsLayer.when(() => {
+        try { console.table(reportsLayer.fields.map(f=>({name:f.name, type:f.type}))); } catch(_) {}
+        updateCount();
+        applyBtn.disabled = false;
+      });
+
+      // ===== Filters =====
       const typeSel = document.getElementById('typeSel');
       const statusSel = document.getElementById('statusSel');
       const dateSel = document.getElementById('dateSel');
+
       document.getElementById('applyBtn').addEventListener('click', () => {
         const parts = [];
-        if (typeSel.value) parts.push(`${CONFIG.fields.type} = '${typeSel.value}'`);
+        if (typeSel.value)   parts.push(`${CONFIG.fields.type} = '${typeSel.value}'`);
         if (statusSel.value) parts.push(`${CONFIG.fields.status} = '${statusSel.value}'`);
         if (dateSel.value) {
           const d = new Date(dateSel.value);
           if (CONFIG.fields.created.toLowerCase() === "creationdate") {
-            const start = d.getTime();
-            const end = start + 24*60*60*1000;
+            const start = d.getTime(), end = start + 24*60*60*1000;
             parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);
           } else {
             parts.push(`${CONFIG.fields.created} >= DATE '${dateSel.value}'`);
           }
         }
         reportsLayer.definitionExpression = parts.join(" AND ") || null;
+        updateCount();
+        hideStatus();
       });
+
       document.getElementById('resetBtn').addEventListener('click', () => {
         typeSel.value = ""; statusSel.value = ""; dateSel.value = "";
         reportsLayer.definitionExpression = null;
+        updateCount();
+        hideStatus();
       });
 
-      // Zoom to data
+      // Zoom to reports extent (if any)
       view.whenLayerView(reportsLayer).then(() => {
-        reportsLayer.queryExtent().then(res => { if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
-      });
+        reportsLayer.queryExtent().then((res) => { if (res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
+      }).catch((e)=>{ showStatus("Could not create a layer view for Field Reports. If this layer is private, share it with Everyone or sign in.", 'error'); console.error("Reports layerView error:", e); });
 
-      // NOAA point forecast on click
+      // ===== NOAA point forecast on click =====
       const wxSummary = document.getElementById("wxSummary");
       view.on("click", async (e) => {
         try {
