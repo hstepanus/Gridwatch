@@ -11,7 +11,16 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
     .app{display:grid;grid-template-rows:auto 1fr;height:100%}
     header{display:flex;gap:16px;align-items:center;padding:12px 16px;border-bottom:1px solid #1f263a;background:linear-gradient(180deg,#0f172a,#0b1220)}
-    header h1{margin:0;font-size:20px;letter-spacing:.4px}
+    header h1{
+      margin:0;
+      font-size:28px; /* bigger */
+      letter-spacing:.6px;
+      font-weight:700;
+      background: linear-gradient(90deg,#22d3ee,#a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow:0 0 8px rgba(168,85,247,0.4);
+    }
     .badge{padding:2px 8px;background:#1f2937;color:var(--muted);border-radius:999px;font-size:12px}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#0f172a;border:1px solid #1f263a;border-radius:999px;font-size:12px;color:#cbd5e1}
     .layout{display:grid;grid-template-columns:380px 1fr;gap:14px;padding:14px}
@@ -23,55 +32,35 @@
     .form-embed{width:100%;height:520px;border:0;border-top:1px solid #1f263a}
     .note{color:var(--muted);font-size:12px;margin-top:8px}
     #viewDiv{width:100%;height:100%;min-height:640px;border:1px solid #1f263a;border-radius:14px;position:relative;overflow:hidden}
-    .legend-box{position:absolute;right:12px;bottom:12px;padding:10px;background:#0f172aDD;border:1px solid #1f263a;border-radius:12px;color:#cbd5e1;z-index:5}
+    /* Legend pinned bottom-right */
+    .legend-box{
+      position: fixed;
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      padding:10px 12px;
+      background:#0f172aDD;
+      border:1px solid #1f263a;
+      border-radius:12px;
+      color:#cbd5e1;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
     .legend-box h3{margin:0 0 6px;font-size:12px;color:#94a3b8;font-weight:600}
-    .status { margin:8px 14px 0; padding:10px; border-radius:10px; border:1px solid #334155; background:#0f172a; font-size:12px; color:#cbd5e1; display:none }
-    .status.error { border-color:#b91c1c; background:#7f1d1d33; color:#fecaca }
-    .status.warn  { border-color:#b45309; background:#78350f33; color:#fde68a }
-
+    .wxBox{border-radius:12px;padding:10px;border:1px solid #1f263a;background:#0f172a}
     /* Filters */
     .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
     .filters label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     .filters select,.filters input[type="date"]{width:100%;padding:10px 12px;background:#0f172a;color:#e2e8f0;border:1px solid #1f263a;border-radius:10px}
     .filters button{padding:10px 12px;border:1px solid #1f263a;background:#0f172a;color:#e2e8f0;border-radius:10px;cursor:pointer}
     .filters .buttons{display:flex;gap:8px;align-items:end}
-
-    /* Compact icon visibility switcher beside zoom */
-    .vis-switch {
-      position:absolute; top:12px; left:56px;
-      display:flex; gap:6px; padding:6px;
-      background:#0f172a; border:1px solid #1f263a; border-radius:12px;
-      z-index: 10;
-    }
-    .vis-switch button {
-      width:34px; height:34px; border-radius:8px; border:1px solid #1f263a;
-      background:#0b1220; color:#cbd5e1; cursor:pointer; font-size:16px; line-height:1;
-      display:grid; place-items:center;
-    }
-    .vis-switch button.on { background:#22d3ee22; border-color:#22d3ee; color:#e2e8f0; }
-    .vis-switch .help { width:34px; height:34px; font-weight:700; }
-
-    /* Tooltips */
-    .tooltip {
-      position:absolute; pointer-events:none; opacity:0; transform:translateY(-6px);
-      background:#0b1220; color:#e2e8f0; border:1px solid #1f263a; border-radius:8px;
-      padding:6px 8px; font-size:12px; white-space:nowrap; transition:opacity .12s ease, transform .12s ease;
-      z-index: 20;
-    }
-    .tooltip.show { opacity:1; transform:translateY(0); }
-
-    /* Legend popup */
-    .legend-pop {
-      position:fixed; top:56px; left:12px; width:220px;
-      background:#0f172a; border:1px solid #1f263a; border-radius:12px; color:#cbd5e1;
-      padding:10px; z-index:15; display:none;
-      box-shadow:0 8px 24px rgba(0,0,0,.35);
-    }
-    .legend-pop header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-    .legend-pop h4{ margin:0; font-size:13px; color:#e2e8f0 }
-    .legend-pop button{ background:#0b1220; color:#cbd5e1; border:1px solid #1f263a; border-radius:8px; padding:4px 8px; cursor:pointer; font-size:12px }
-    .legend-pop .row{ display:flex; align-items:center; gap:8px; margin:6px 0 }
-    .legend-pop .ico{ width:22px; height:22px; display:grid; place-items:center; border:1px solid #1f263a; border-radius:6px; background:#0b1220 }
+    /* Visibility switch panel */
+    .vis-switch{position:absolute;top:12px;left:56px;display:flex;gap:6px;padding:6px;background:#0f172a;border:1px solid #1f263a;border-radius:12px;z-index:10}
+    .vis-switch button{width:34px;height:34px;border-radius:8px;border:1px solid #1f263a;background:#0b1220;color:#cbd5e1;cursor:pointer;font-size:16px;line-height:1;display:grid;place-items:center}
+    .vis-switch button.on{background:#22d3ee22;border-color:#22d3ee;color:#e2e8f0}
+    .vis-switch .help{width:34px;height:34px;font-weight:700}
+    /* Tooltip */
+    .tooltip{position:absolute;pointer-events:none;opacity:0;transform:translateY(-6px);background:#0b1220;color:#e2e8f0;border:1px solid #1f263a;border-radius:8px;padding:6px 8px;font-size:12px;white-space:nowrap;transition:opacity .12s ease,transform .12s ease;z-index:20}
+    .tooltip.show{opacity:1;transform:translateY(0)}
   </style>
 </head>
 <body>
@@ -82,72 +71,27 @@
     </header>
 
     <div class="layout">
-      <!-- LEFT: Survey + Filters + Weather -->
+      <!-- LEFT -->
       <section class="panel">
-        <header>
-          <h2>Report an issue</h2>
-          <a id="openForm" href="#" target="_blank">open in new tab ↗</a>
-        </header>
-        <iframe id="s123" class="form-embed" title="Survey123 form"></iframe>
-
+        <header><h2>Report an issue</h2><a id="openForm" href="#" target="_blank">open in new tab ↗</a></header>
+        <iframe id="s123" class="form-embed"></iframe>
         <div class="body">
           <h2 style="margin:14px 0 6px;font-size:15px;color:#cbd5e1;">Map filters</h2>
           <div class="filters">
-            <div>
-              <label for="typeSel">Type</label>
-              <select id="typeSel">
-                <option value="">All</option>
-                <option>Outage</option>
-                <option>Voltage spike</option>
-                <option>Damaged line</option>
-                <option>Tree on line</option>
-              </select>
-            </div>
-            <div>
-              <label for="statusSel">Status</label>
-              <select id="statusSel">
-                <option value="">All</option>
-                <option>New</option>
-                <option>In progress</option>
-                <option>Resolved</option>
-              </select>
-            </div>
-            <div>
-              <label for="dateSel">Since (date)</label>
-              <input id="dateSel" type="date" />
-            </div>
-            <div class="buttons">
-              <button id="applyBtn">Apply</button>
-              <button id="resetBtn">Reset</button>
-            </div>
+            <div><label>Type</label><select id="typeSel"><option value="">All</option><option>Outage</option><option>Voltage spike</option><option>Damaged line</option><option>Tree on line</option></select></div>
+            <div><label>Status</label><select id="statusSel"><option value="">All</option><option>New</option><option>In progress</option><option>Resolved</option></select></div>
+            <div><label>Since (date)</label><input id="dateSel" type="date" /></div>
+            <div class="buttons"><button id="applyBtn">Apply</button><button id="resetBtn">Reset</button></div>
           </div>
-
           <h2>Weather (NOAA)</h2>
-          <p class="note">Click anywhere on the map to fetch a local forecast.</p>
+          <p class="note">Click map for local forecast.</p>
           <div id="wxBox" class="wxBox"><div id="wxSummary">No location selected.</div></div>
         </div>
       </section>
-
-      <!-- RIGHT: Map -->
+      <!-- RIGHT -->
       <section class="panel">
-        <header>
-          <h2>Live reports</h2>
-          <span class="pill" id="countPill">0 features</span>
-        </header>
-
-        <div id="viewDiv">
-          <!-- Legend popup -->
-          <div id="legendPop" class="legend-pop" role="dialog" aria-modal="false" aria-labelledby="legendTitle">
-            <header>
-              <h4 id="legendTitle">Layer toggles</h4>
-              <button id="legendClose" type="button" aria-label="Close legend">✕</button>
-            </header>
-            <div class="row"><div class="ico">⚡</div> <div><b>Field Reports</b><br><small>Survey123 submissions</small></div></div>
-            <div class="row"><div class="ico">🗺️</div> <div><b>NOVEC Territory</b><br><small>Service boundary</small></div></div>
-            <div class="row"><div class="ico">⚠️</div> <div><b>NWS Alerts</b><br><small>Active weather alerts</small></div></div>
-          </div>
-        </div>
-
+        <header><h2>Live reports</h2><span class="pill" id="countPill">0 features</span></header>
+        <div id="viewDiv"></div>
         <div class="legend-box">
           <h3>Legend</h3>
           <div>● Outage</div><div>● Voltage spike</div><div>● Damaged line</div><div>● Tree on line</div>
@@ -157,166 +101,43 @@
   </div>
 
   <script>
-    const CONFIG = {
-      survey123Url: "https://survey123.arcgis.com/share/dbec98d452884e3ca51548ab0ca97c1f?hide=navbar,header",
+    const CONFIG={survey123Url:"https://survey123.arcgis.com/share/dbec98d452884e3ca51548ab0ca97c1f?hide=navbar,header",
       featureLayerUrl:"https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_dbec98d452884e3ca51548ab0ca97c1f_form/FeatureServer/0",
-      fields:{ type:"type", status:"status", created:"CreationDate" },
+      fields:{type:"type",status:"status",created:"CreationDate"},
       nwsAlertsUrl:"https://api.weather.gov/alerts/active?status=actual&message_type=alert",
       novecLayerUrl:"https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/drive_download_20250623T221527Z_1_001/FeatureServer/0",
-      view:{ center:[-77.4,38.8], zoom:10 }
-    };
-
-    // Form embed
-    document.getElementById('s123').src = CONFIG.survey123Url;
-    document.getElementById('openForm').href = CONFIG.survey123Url;
-
+      view:{center:[-77.4,38.8],zoom:10}};
+    document.getElementById('s123').src=CONFIG.survey123Url;document.getElementById('openForm').href=CONFIG.survey123Url;
     require(["esri/Map","esri/views/MapView","esri/layers/FeatureLayer","esri/layers/GeoJSONLayer","esri/widgets/Search","esri/widgets/BasemapToggle"],
-    function(Map,MapView,FeatureLayer,GeoJSONLayer,Search,BasemapToggle){
-
-      // Layers
-      const reportsLayer=new FeatureLayer({
-        url:CONFIG.featureLayerUrl,outFields:["*"],title:"Field Reports",
-        featureReduction:{ type:"cluster" }
-      });
-      const novec=new FeatureLayer({
-        url:CONFIG.novecLayerUrl,title:"NOVEC Territory",opacity:0.25,minScale:0,maxScale:0
-      });
-      const nwsAlerts=new GeoJSONLayer({ url:CONFIG.nwsAlertsUrl, title:"NWS Alerts", visible:false });
-
-      const map=new Map({ basemap:"osm", layers:[reportsLayer,novec,nwsAlerts] });
-      const view=new MapView({ container:"viewDiv", map, center:CONFIG.view.center, zoom:CONFIG.view.zoom });
-      view.ui.add(new Search({view}),"top-right");
-      view.ui.add(new BasemapToggle({view,nextBasemap:"satellite"}),"top-right");
-
-      // Feature count pill
+    (Map,MapView,FeatureLayer,GeoJSONLayer,Search,BasemapToggle)=>{
+      const reportsLayer=new FeatureLayer({url:CONFIG.featureLayerUrl,outFields:["*"],title:"Field Reports",featureReduction:{type:"cluster"}});
+      const novec=new FeatureLayer({url:CONFIG.novecLayerUrl,title:"NOVEC Territory",opacity:0.25,minScale:0,maxScale:0});
+      const nwsAlerts=new GeoJSONLayer({url:CONFIG.nwsAlertsUrl,title:"NWS Alerts",visible:false});
+      const map=new Map({basemap:"osm",layers:[reportsLayer,novec,nwsAlerts]});
+      const view=new MapView({container:"viewDiv",map,center:CONFIG.view.center,zoom:CONFIG.view.zoom});
+      view.ui.add(new Search({view}),"top-right");view.ui.add(new BasemapToggle({view,nextBasemap:"satellite"}),"top-right");
       const countPill=document.getElementById('countPill');
-      function updateCount(){
-        if(!reportsLayer.loaded) return;
-        const q=reportsLayer.createQuery(); q.where=reportsLayer.definitionExpression||"1=1"; q.returnGeometry=false;
-        reportsLayer.queryFeatureCount(q).then(n=>countPill.textContent=`${n} features`);
-      }
-      reportsLayer.when(updateCount); reportsLayer.watch("definitionExpression",updateCount);
-
-      // ===== Filters wiring =====
-      const typeSel=document.getElementById('typeSel');
-      const statusSel=document.getElementById('statusSel');
-      const dateSel=document.getElementById('dateSel');
-      const applyBtn=document.getElementById('applyBtn');
-      const resetBtn=document.getElementById('resetBtn');
-
-      // prevent using filters before fields are known
-      applyBtn.disabled = true;
-      reportsLayer.when(()=>{ applyBtn.disabled=false; });
-
-      applyBtn.addEventListener('click', ()=>{
-        const parts=[];
-        if(typeSel.value)   parts.push(`${CONFIG.fields.type}='${typeSel.value}'`);
-        if(statusSel.value) parts.push(`${CONFIG.fields.status}='${statusSel.value}'`);
-        if(dateSel.value){
-          const d=new Date(dateSel.value);
-          if (CONFIG.fields.created.toLowerCase()==="creationdate"){
-            const start=d.getTime(), end=start+24*60*60*1000;
-            parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);
-          } else {
-            parts.push(`${CONFIG.fields.created} >= DATE '${dateSel.value}'`);
-          }
-        }
-        reportsLayer.definitionExpression = parts.join(" AND ") || null;
-        updateCount();
-      });
-
-      resetBtn.addEventListener('click', ()=>{
-        typeSel.value=""; statusSel.value=""; dateSel.value="";
-        reportsLayer.definitionExpression=null;
-        updateCount();
-      });
-
-      // Zoom to reports extent (if any)
-      view.whenLayerView(reportsLayer).then(()=>{
-        reportsLayer.queryExtent().then((res)=>{ if(res.extent) view.goTo(res.extent.expand(1.2)).catch(()=>{}); });
-      });
-
-      // ===== Icon toggle panel (with dynamic tooltips) =====
-      const panel=document.createElement('div');
-      panel.className='vis-switch';
-      panel.innerHTML=`
-        <button id="btnFR"  aria-label="Toggle Field Reports" data-base="Field Reports">⚡</button>
-        <button id="btnNOV" aria-label="Toggle NOVEC Territory" data-base="NOVEC Territory">🗺️</button>
-        <button id="btnNWS" aria-label="Toggle NWS Alerts" data-base="NWS Alerts">⚠️</button>
-        <button id="btnHelp" class="help" aria-label="Open legend" data-base="Legend / Help">?</button>
-      `;
-      view.container.appendChild(panel);
-
-      // Tooltip element (shared)
-      const tip=document.createElement('div'); tip.className='tooltip'; tip.id='tip';
-      view.container.appendChild(tip);
-
-      const btnFR=panel.querySelector('#btnFR');
-      const btnNOV=panel.querySelector('#btnNOV');
-      const btnNWS=panel.querySelector('#btnNWS');
-      const btnHelp=panel.querySelector('#btnHelp');
-
-      function syncButtons(){
-        btnFR.classList.toggle('on',reportsLayer.visible);
-        btnNOV.classList.toggle('on',novec.visible);
-        btnNWS.classList.toggle('on',nwsAlerts.visible);
-      }
-      function tipTextFor(btn){
-        const base=btn.getAttribute('data-base')||'';
-        if(btn===btnFR)  return `${base} — ${reportsLayer.visible?'ON':'OFF'}`;
-        if(btn===btnNOV) return `${base} — ${novec.visible?'ON':'OFF'}`;
-        if(btn===btnNWS) return `${base} — ${nwsAlerts.visible?'ON':'OFF'}`;
-        return base;
-      }
-      function showTip(btn){
-        tip.textContent = tipTextFor(btn);
-        const rect=btn.getBoundingClientRect(), host=view.container.getBoundingClientRect();
-        tip.style.left=(rect.left-host.left+rect.width/2)+'px';
-        tip.style.top =(rect.top -host.top -8)+'px';
-        tip.style.transform='translate(-50%,-6px)';
-        tip.classList.add('show');
-      }
-      function hideTip(){ tip.classList.remove('show'); }
-      [btnFR,btnNOV,btnNWS,btnHelp].forEach(btn=>{
-        btn.addEventListener('mouseenter', ()=>showTip(btn));
-        btn.addEventListener('mouseleave', hideTip);
-        btn.addEventListener('focus', ()=>showTip(btn));
-        btn.addEventListener('blur', hideTip);
-      });
-
-      btnFR.onclick=()=>{ reportsLayer.visible=!reportsLayer.visible; syncButtons(); showTip(btnFR); };
-      btnNOV.onclick=()=>{ novec.visible=!novec.visible;       syncButtons(); showTip(btnNOV); };
-      btnNWS.onclick=()=>{ nwsAlerts.visible=!nwsAlerts.visible; syncButtons(); showTip(btnNWS); };
-      syncButtons();
-
-      // Legend popup
-      const legendPop=document.getElementById('legendPop');
-      const legendClose=document.getElementById('legendClose');
-      function openLegend(){ legendPop.style.display='block'; }
-      function closeLegend(){ legendPop.style.display='none'; }
-      btnHelp.addEventListener('click', openLegend);
-      legendClose.addEventListener('click', closeLegend);
-      view.container.addEventListener('click',(e)=>{
-        if(legendPop.style.display==='block' && !legendPop.contains(e.target) && e.target!==btnHelp) closeLegend();
-      });
-
-      // NOAA point forecast on click
-      const wxSummary=document.getElementById("wxSummary");
-      view.on("click",async (e)=>{
-        try{
-          wxSummary.textContent="Fetching NOAA point forecast…";
-          const { longitude, latitude } = e.mapPoint;
-          const meta = await fetch(`https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`).then(r=>r.json());
-          const forecastUrl = meta?.properties?.forecast || meta?.properties?.forecastHourly;
-          if(!forecastUrl) throw new Error("No forecast URL for this point.");
-          const fcst = await fetch(forecastUrl).then(r=>r.json());
-          const p = fcst?.properties?.periods?.[0];
-          wxSummary.innerHTML = p ? `<b>${p.name || "Forecast"}</b><br>${p.detailedForecast || p.shortForecast}` : "No forecast found.";
-        }catch(err){
-          wxSummary.textContent="NOAA request failed. If blocked, we can add a tiny proxy.";
-          console.error(err);
-        }
-      });
+      function updateCount(){if(!reportsLayer.loaded)return;const q=reportsLayer.createQuery();q.where=reportsLayer.definitionExpression||"1=1";q.returnGeometry=false;reportsLayer.queryFeatureCount(q).then(n=>countPill.textContent=`${n} features`);}
+      reportsLayer.when(updateCount);reportsLayer.watch("definitionExpression",updateCount);
+      // Filters
+      const typeSel=document.getElementById('typeSel'),statusSel=document.getElementById('statusSel'),dateSel=document.getElementById('dateSel');
+      document.getElementById('applyBtn').onclick=()=>{const parts=[];if(typeSel.value)parts.push(`${CONFIG.fields.type}='${typeSel.value}'`);if(statusSel.value)parts.push(`${CONFIG.fields.status}='${statusSel.value}'`);if(dateSel.value){const d=new Date(dateSel.value);if(CONFIG.fields.created.toLowerCase()==="creationdate"){const start=d.getTime(),end=start+86400000;parts.push(`${CONFIG.fields.created} BETWEEN ${start} AND ${end}`);}else{parts.push(`${CONFIG.fields.created} >= DATE '${dateSel.value}'`);}}reportsLayer.definitionExpression=parts.join(" AND ")||null;updateCount();};
+      document.getElementById('resetBtn').onclick=()=>{typeSel.value=statusSel.value=dateSel.value="";reportsLayer.definitionExpression=null;updateCount();}
+      // NOAA click forecast
+      const wxSummary=document.getElementById("wxSummary");view.on("click",async e=>{try{wxSummary.textContent="Fetching forecast…";const {longitude,latitude}=e.mapPoint;const meta=await fetch(`https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`).then(r=>r.json());const url=meta?.properties?.forecast||meta?.properties?.forecastHourly;if(!url)throw new Error("No forecast");const fcst=await fetch(url).then(r=>r.json());const p=fcst?.properties?.periods?.[0];wxSummary.innerHTML=p?`<b>${p.name||"Forecast"}</b><br>${p.detailedForecast||p.shortForecast}`:"No forecast found.";}catch(err){wxSummary.textContent="NOAA request failed.";console.error(err);}});
+      // Toggle panel
+      const panel=document.createElement('div');panel.className='vis-switch';panel.innerHTML=`<button id="btnFR" data-base="Field Reports">⚡</button><button id="btnNOV" data-base="NOVEC Territory">🗺️</button><button id="btnNWS" data-base="NWS Alerts">⚠️</button>`;view.container.appendChild(panel);
+      const tip=document.createElement('div');tip.className='tooltip';view.container.appendChild(tip);
+      const btnFR=panel.querySelector('#btnFR'),btnNOV=panel.querySelector('#btnNOV'),btnNWS=panel.querySelector('#btnNWS');
+      function sync(){btnFR.classList.toggle('on',reportsLayer.visible);btnNOV.classList.toggle('on',novec.visible);btnNWS.classList.toggle('on',nwsAlerts.visible);}
+      function tipText(btn){const base=btn.getAttribute('data-base');if(btn===btnFR)return`${base} — ${reportsLayer.visible?'ON':'OFF'}`;if(btn===btnNOV)return`${base} — ${novec.visible?'ON':'OFF'}`;if(btn===btnNWS)return`${base} — ${nwsAlerts.visible?'ON':'OFF'}`;return base;}
+      function showTip(btn){tip.textContent=tipText(btn);const r=btn.getBoundingClientRect(),h=view.container.getBoundingClientRect();tip.style.left=(r.left-h.left+r.width/2)+'px';tip.style.top=(r.top-h.top-8)+'px';tip.classList.add('show');}
+      function hideTip(){tip.classList.remove('show');}
+      [btnFR,btnNOV,btnNWS].forEach(b=>{b.onmouseenter=()=>showTip(b);b.onmouseleave=hideTip;b.onfocus=()=>showTip(b);b.onblur=hideTip;});
+      btnFR.onclick=()=>{reportsLayer.visible=!reportsLayer.visible;sync();showTip(btnFR);};
+      btnNOV.onclick=()=>{novec.visible=!novec.visible;sync();showTip(btnNOV);};
+      btnNWS.onclick=()=>{nwsAlerts.visible=!nwsAlerts.visible;sync();showTip(btnNWS);};
+      sync();
     });
   </script>
 </body>
